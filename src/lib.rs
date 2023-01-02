@@ -75,7 +75,7 @@ where
 {
     let serialized = postcard::to_stdvec(x).unwrap();
     let params = BrotliEncoderParams {
-        quality: 0,
+        quality: 6,
         ..Default::default()
     };
     let mut compressed_writer = CompressorWriter::with_params(Vec::new(), 4096, &params);
@@ -109,8 +109,8 @@ mod tests {
     fn simple_test() {
         let mut big_vec = Vec::new();
         let mut compressed_stack =
-            CompressedStack::new_with_options(ChunkSize::SizeElements(1024 * 1024 * 9));
-        for _ in 0..(1024 * 1024 * 10) {
+            CompressedStack::new_with_options(ChunkSize::SizeElements(1024 * 1024 * 99));
+        for _ in 0..(1024 * 1024 * 100) {
             big_vec.push(1.0);
             compressed_stack.push(1.0);
         }
