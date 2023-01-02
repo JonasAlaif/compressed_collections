@@ -6,3 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+brotli = "3.3.4"
+postcard = { version = "1.0.2", features = ["use-std"] }
+serde = { version = "1.0.152", features = ["derive"] }
