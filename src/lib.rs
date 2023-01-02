@@ -16,14 +16,15 @@ pub struct CompressedStack<T> {
     uncompressed_buffer: Vec<T>,
     compressed_storage: Vec<Vec<u8>>,
     chunk_size: usize,
+    compression_level: i32,
 }
 
 impl<T> CompressedStack<T> {
     pub fn new() -> CompressedStack<T> {
-        CompressedStack::new_with_options(ChunkSize::Auto)
+        CompressedStack::new_with_options(ChunkSize::Auto, 6)
     }
 
-    pub fn new_with_options(chunksize: ChunkSize) -> CompressedStack<T> {
+    pub fn new_with_options(chunksize: ChunkSize, compression_level: i32) -> CompressedStack<T> {
         let elementsize = std::mem::size_of::<T>();
         let chunk_size = match chunksize {
             ChunkSize::SizeElements(x) => x,
@@ -37,6 +38,7 @@ impl<T> CompressedStack<T> {
             uncompressed_buffer,
             compressed_storage,
             chunk_size,
+            compression_level,
         }
     }
     pub fn push(&mut self, value: T)
@@ -45,7 +47,7 @@ impl<T> CompressedStack<T> {
     {
         self.uncompressed_buffer.push(value);
         if self.uncompressed_buffer.len() >= self.chunk_size {
-            let compressed = compress(&self.uncompressed_buffer);
+            let compressed = compress(&self.uncompressed_buffer, self.compression_level);
             self.compressed_storage.push(compressed);
             self.uncompressed_buffer.clear();
         }
@@ -69,13 +71,13 @@ impl<T> Default for CompressedStack<T> {
     }
 }
 
-fn compress<T>(x: &Vec<T>) -> Vec<u8>
+fn compress<T>(x: &Vec<T>, compression_level: i32) -> Vec<u8>
 where
     T: Serialize,
 {
     let serialized = postcard::to_stdvec(x).unwrap();
     let params = BrotliEncoderParams {
-        quality: 6,
+        quality: compression_level,
         ..Default::default()
     };
     let mut compressed_writer = CompressorWriter::with_params(Vec::new(), 4096, &params);
@@ -109,7 +111,7 @@ mod tests {
     fn simple_test() {
         let mut big_vec = Vec::new();
         let mut compressed_stack =
-            CompressedStack::new_with_options(ChunkSize::SizeElements(1024 * 1024 * 99));
+            CompressedStack::new_with_options(ChunkSize::SizeElements(1024 * 1024 * 99), 2);
         for _ in 0..(1024 * 1024 * 100) {
             big_vec.push(1.0);
             compressed_stack.push(1.0);
