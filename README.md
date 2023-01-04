@@ -1,6 +1,6 @@
 # Collections which transparently compress data to reduce memory usage
 
-This create offers collections which automatically compress themselves, which reduces memory usage, sometimes
+This crate offers collections which automatically compress themselves, which reduces memory usage, sometimes
 substantially, allowing collections to be held in memory that would otherwise be too big.
 
 The only restriction on the datatypes in the collections is that they must be serde serializable.
