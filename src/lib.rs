@@ -28,14 +28,16 @@
 //! - [ ] Deque
 //! - [ ] Hashmap
 
-use brotli::enc::BrotliEncoderParams;
-use brotli::CompressorWriter;
-use brotli::DecompressorWriter;
-use serde::*;
-use std::io::Write;
+use serde::Deserialize;
+use serde::Serialize;
+
+mod compression;
+mod stack;
+
+pub use stack::Stack;
 
 /// The amount of data to buffer before compressing.
-/// 
+///
 /// # Examples
 ///
 ///
@@ -54,7 +56,7 @@ use std::io::Write;
 ///     compressed_stack.push(1.0);
 /// }
 /// ```
-/// 
+///
 /// # Low stability
 /// This enum is dependent on the internal implementation, so it is likely to change frequently
 #[derive(
@@ -72,119 +74,9 @@ pub enum ChunkSize {
     Default,
 }
 
-/// A stack which automatically compresses itself over a certain size
-///
-/// # Examples
-///
-/// ```
-/// let mut compressed_stack = Stack::new();
-/// for _ in 0..(1024 * 1024 * 1024) {
-///     compressed_stack.push(1.0);
-/// }
-/// ```
-///
-/// # Panics
-///
-/// This function should not panic (except on out of memory conditions). If it does, please submit an issue.
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Serialize, Deserialize)]
-pub struct Stack<T> {
-    uncompressed_buffer: Vec<T>,
-    compressed_storage: Vec<Vec<u8>>,
-    chunk_size: usize,
-    compression_level: i32,
-}
-
-impl<T> Stack<T> {
-    /// Constructor with default options
-    pub fn new() -> Stack<T> {
-        Stack::new_with_options(ChunkSize::Default, 0)
-    }
-
-    /// Constructor with customisable options
-    ///
-    /// - `chunksize` size of chunks to compress, see [`ChunkSize`]
-    /// - `compression_level` Brotli compression level (0-9) default is 0
-    /// 
-    /// # Low stability
-    /// This constructor is dependent on the internal implementation, so it is likely to change more frequently than [`Stack::new`]
-    pub fn new_with_options(chunksize: ChunkSize, compression_level: i32) -> Stack<T> {
-        let elementsize = std::mem::size_of::<T>();
-        let chunk_size = match chunksize {
-            ChunkSize::SizeElements(x) => x,
-            ChunkSize::SizeBytes(x) => x / elementsize,
-            ChunkSize::SizeMB(x) => x * 1024 * 1024 / elementsize,
-            ChunkSize::Default => 10 * 1024 * 1024 / elementsize,
-        };
-        let uncompressed_buffer = Vec::new();
-        let compressed_storage = Vec::new();
-        Stack {
-            uncompressed_buffer,
-            compressed_storage,
-            chunk_size,
-            compression_level,
-        }
-    }
-    /// Push an item onto the stack
-    pub fn push(&mut self, value: T)
-    where
-        T: Serialize,
-    {
-        self.uncompressed_buffer.push(value);
-        if self.uncompressed_buffer.len() >= self.chunk_size {
-            let compressed = compress(&self.uncompressed_buffer, self.compression_level);
-            self.compressed_storage.push(compressed);
-            self.uncompressed_buffer.clear();
-        }
-    }
-    /// Pop an item off the stack
-    pub fn pop(&mut self) -> Option<T>
-    where
-        T: for<'a> Deserialize<'a>,
-    {
-        if self.uncompressed_buffer.is_empty() {
-            if let Some(x) = self.compressed_storage.pop() {
-                self.uncompressed_buffer = decompress(&x);
-            }
-        }
-        self.uncompressed_buffer.pop()
-    }
-}
-
-impl<T> Default for Stack<T> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-fn compress<T>(x: &Vec<T>, compression_level: i32) -> Vec<u8>
-where
-    T: Serialize,
-{
-    let serialized = postcard::to_stdvec(x).unwrap(); // Only errors on OOM
-    let params = BrotliEncoderParams {
-        quality: compression_level,
-        ..Default::default()
-    };
-    let mut compressed_writer = CompressorWriter::with_params(Vec::new(), 4096, &params);
-    compressed_writer.write_all(&serialized).unwrap(); // Cannot error because we're writing to a Vec
-    compressed_writer.flush().unwrap(); // Cannot error because we're writing to a Vec
-    compressed_writer.into_inner()
-}
-
-fn decompress<T>(x: &[u8]) -> Vec<T>
-where
-    T: for<'a> Deserialize<'a>,
-{
-    let mut decompressor_writer = DecompressorWriter::new(Vec::new(), 4096);
-    decompressor_writer.write_all(x).unwrap(); // Cannot error because we're writing to a Vec
-    decompressor_writer.flush().unwrap(); // Cannot error because we're writing to a Vec
-    let decompressed = decompressor_writer.into_inner().unwrap(); // Cannot error because we're writing to a Vec
-    postcard::from_bytes(&decompressed).unwrap() // Only errors on OOM
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::*;
 
     #[test]
     fn it_works() {
