@@ -35,7 +35,8 @@ use serde::*;
 use std::io::Write;
 
 /// The amount of data to buffer before compressing.
-/// /// # Examples
+/// 
+/// # Examples
 ///
 ///
 /// This compresses every 1MB
@@ -53,6 +54,9 @@ use std::io::Write;
 ///     compressed_stack.push(1.0);
 /// }
 /// ```
+/// 
+/// # Low stability
+/// This enum is dependent on the internal implementation, so it is likely to change frequently
 #[derive(
     Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default, Serialize, Deserialize,
 )]
@@ -77,11 +81,11 @@ pub enum ChunkSize {
 /// for _ in 0..(1024 * 1024 * 1024) {
 ///     compressed_stack.push(1.0);
 /// }
+/// ```
 ///
 /// # Panics
 ///
-/// This function should not panic (except potentially on out of memory conditions). If it does, please submit an issue.
-/// ```
+/// This function should not panic (except on out of memory conditions). If it does, please submit an issue.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Serialize, Deserialize)]
 pub struct Stack<T> {
     uncompressed_buffer: Vec<T>,
@@ -93,13 +97,16 @@ pub struct Stack<T> {
 impl<T> Stack<T> {
     /// Constructor with default options
     pub fn new() -> Stack<T> {
-        Stack::new_with_options(ChunkSize::Default, 6)
+        Stack::new_with_options(ChunkSize::Default, 0)
     }
 
     /// Constructor with customisable options
     ///
-    /// - `chunksize` - size of chunks to compress, see [`ChunkSize`]
-    /// - `compression_level` - Brotli compression level (0-9) default is 6
+    /// - `chunksize` size of chunks to compress, see [`ChunkSize`]
+    /// - `compression_level` Brotli compression level (0-9) default is 0
+    /// 
+    /// # Low stability
+    /// This constructor is dependent on the internal implementation, so it is likely to change more frequently than [`Stack::new`]
     pub fn new_with_options(chunksize: ChunkSize, compression_level: i32) -> Stack<T> {
         let elementsize = std::mem::size_of::<T>();
         let chunk_size = match chunksize {
