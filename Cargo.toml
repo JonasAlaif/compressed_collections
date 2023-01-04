@@ -1,6 +1,6 @@
 [package]
 name = "compressed_collections"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 authors = ["Max Conway"]
 repository = "https://github.com/maxconway/compressed_collections"
