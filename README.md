@@ -3,8 +3,6 @@
 This create offers collections which automatically compress themselves, which reduces memory usage, sometimes
 substantially, allowing collections to be held in memory that would otherwise be too big.
 
-So far, a stack is implemented, which can be used as a dropin replacement for a Vec stack.
-
 The only restriction on the datatypes in the collections is that they must be serde serializable.
 
 For instance:
@@ -12,11 +10,11 @@ For instance:
 use compressed_collections::Stack;
 
 let mut compressed_stack = Stack::new();
-for _ in 0..(1024 * 1024) {
-    compressed_stack.push(1.0);
+for _ in 0..(1024 * 1024 * 100) {
+    compressed_stack.push(1);
 }
 ```
-This only allocates around 10MB (the default buffer size), whereas the equivalent vector would be around 4GB in size.
+This only allocates around 10MB (the default buffer size), whereas the equivalent vector would be around 100MB in size.
 
 Design goals:
 - Provide collections with a subset of the API of the standard equivalent wherever possible for easy dropin use.

@@ -10,16 +10,16 @@
 //!
 //! For instance:
 //!
-//! ```
+//! ```no_run
 //! use compressed_collections::Stack;
 //!
 //! let mut compressed_stack = Stack::new();
-//! for _ in 0..(1024 * 1024) {
-//!     compressed_stack.push(1.0);
+//! for _ in 0..(1024 * 1024 * 100) {
+//!     compressed_stack.push(1);
 //! }
 //! ```
 //!
-//! This only allocates around 10MB (the default buffer size), whereas the equivalent vector would be around 4GB in size.
+//! This only allocates around 10MB (the default buffer size), whereas the equivalent vector would be around 100MB in size.
 //!
 //! Design goals:
 //! - Provide collections with a subset of the API of the standard equivalent wherever possible for easy dropin use.
