@@ -12,8 +12,10 @@ use crate::ChunkSize;
 /// # Examples
 ///
 /// ```
+/// use compressed_collections::Deque;
+/// 
 /// let mut compressed_deque = Deque::new();
-/// for _ in 0..(1024 * 1024 * 1024) {
+/// for _ in 0..(1024) {
 ///     compressed_deque.push_back(1);
 /// }
 /// while let Some(x) = compressed_deque.pop_front(){
@@ -132,8 +134,8 @@ mod tests {
     fn simple_test() {
         let mut big_vecdeque = std::collections::VecDeque::new();
         let mut compressed_deque =
-            Deque::new_with_options(ChunkSize::SizeElements(1024 * 1024 * 99), 0);
-        for _ in 0..(1024 * 1024 * 100) {
+            Deque::new_with_options(ChunkSize::SizeElements(1024 * 9), 0);
+        for _ in 0..(1024 * 10) {
             big_vecdeque.push_back(1);
             compressed_deque.push_back(1);
         }

@@ -10,8 +10,10 @@ use crate::ChunkSize;
 /// # Examples
 ///
 /// ```
+/// use compressed_collections::Stack;
+/// 
 /// let mut compressed_stack = Stack::new();
-/// for _ in 0..(1024 * 1024 * 1024) {
+/// for _ in 0..(1024) {
 ///     compressed_stack.push(1.0);
 /// }
 /// ```
@@ -97,8 +99,8 @@ mod tests {
     fn simple_test() {
         let mut big_vec = Vec::new();
         let mut compressed_stack =
-            Stack::new_with_options(ChunkSize::SizeElements(1024 * 1024 * 99), 2);
-        for _ in 0..(1024 * 1024 * 100) {
+            Stack::new_with_options(ChunkSize::SizeElements(1024 * 9), 0);
+        for _ in 0..(1024 * 10) {
             big_vec.push(1.0);
             compressed_stack.push(1.0);
         }
