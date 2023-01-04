@@ -9,8 +9,10 @@ The only restriction on the datatypes in the collections is that they must be se
 
 For instance:
 ```
+use compressed_collections::Stack;
+
 let mut compressed_stack = Stack::new();
-for _ in 0..(1024 * 1024 * 1024) {
+for _ in 0..(1024 * 1024) {
     compressed_stack.push(1.0);
 }
 ```
@@ -22,8 +24,8 @@ Design goals:
 
 Datastructures:
 - [x] Stack
-- [ ] Deque
-- [ ] Hashmap
+- [x] Deque
+- [ ] Map
 
 ## License
 

@@ -27,8 +27,8 @@
 //!
 //! Datastructures:
 //! - [x] Stack
-//! - [ ] Deque
-//! - [ ] Hashmap
+//! - [x] Deque
+//! - [ ] Map
 
 use serde::Deserialize;
 use serde::Serialize;
