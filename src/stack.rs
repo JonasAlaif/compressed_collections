@@ -105,6 +105,22 @@ where
     }
 }
 
+impl<T> FromIterator<T> for Stack<T>
+where
+    T: Serialize + for<'a> Deserialize<'a>,
+{
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self
+    where
+        T: Serialize + for<'a> Deserialize<'a>,
+    {
+        let mut c = Stack::new();
+        for i in iter {
+            c.push(i);
+        }
+        c
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::*;

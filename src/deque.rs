@@ -140,6 +140,22 @@ where
     }
 }
 
+impl<T> FromIterator<T> for Deque<T>
+where
+    T: Serialize + for<'a> Deserialize<'a>,
+{
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self
+    where
+        T: Serialize + for<'a> Deserialize<'a>,
+    {
+        let mut c = Deque::new();
+        for i in iter {
+            c.push_back(i);
+        }
+        c
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::*;
