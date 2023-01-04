@@ -11,7 +11,7 @@ use crate::ChunkSize;
 ///
 /// ```
 /// use compressed_collections::Stack;
-/// 
+///
 /// let mut compressed_stack = Stack::new();
 /// for _ in 0..(1024) {
 ///     compressed_stack.push(1.0);
@@ -91,6 +91,20 @@ impl<T> Default for Stack<T> {
     }
 }
 
+impl<T> Iterator for Stack<T>
+where
+    T: Serialize + for<'a> Deserialize<'a>,
+{
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item>
+    where
+        T: Serialize + for<'a> Deserialize<'a>,
+    {
+        self.pop()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::*;
@@ -98,8 +112,7 @@ mod tests {
     #[test]
     fn simple_test() {
         let mut big_vec = Vec::new();
-        let mut compressed_stack =
-            Stack::new_with_options(ChunkSize::SizeElements(1024 * 9), 0);
+        let mut compressed_stack = Stack::new_with_options(ChunkSize::SizeElements(1024 * 9), 0);
         for _ in 0..(1024 * 10) {
             big_vec.push(1.0);
             compressed_stack.push(1.0);
@@ -107,6 +120,26 @@ mod tests {
         loop {
             let a = big_vec.pop();
             let b = compressed_stack.pop();
+            assert!(a == b);
+            if a.is_none() | b.is_none() {
+                break;
+            }
+        }
+    }
+
+    #[test]
+    fn iter_test() {
+        let mut big_vec = Vec::new();
+        let mut compressed_stack = Stack::new_with_options(ChunkSize::SizeElements(1024 * 9), 0);
+        for _ in 0..(1024 * 10) {
+            big_vec.push(1.0);
+            compressed_stack.push(1.0);
+        }
+        let mut big_vec_it = big_vec.into_iter();
+        let mut compressed_stack_it = compressed_stack.into_iter();
+        loop {
+            let a = big_vec_it.next();
+            let b = compressed_stack_it.next();
             assert!(a == b);
             if a.is_none() | b.is_none() {
                 break;

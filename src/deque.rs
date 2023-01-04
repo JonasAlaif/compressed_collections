@@ -13,7 +13,7 @@ use crate::ChunkSize;
 ///
 /// ```
 /// use compressed_collections::Deque;
-/// 
+///
 /// let mut compressed_deque = Deque::new();
 /// for _ in 0..(1024) {
 ///     compressed_deque.push_back(1);
@@ -126,6 +126,20 @@ impl<T> Default for Deque<T> {
     }
 }
 
+impl<T> Iterator for Deque<T>
+where
+    T: Serialize + for<'a> Deserialize<'a>,
+{
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item>
+    where
+        T: Serialize + for<'a> Deserialize<'a>,
+    {
+        self.pop_front()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::*;
@@ -133,8 +147,7 @@ mod tests {
     #[test]
     fn simple_test() {
         let mut big_vecdeque = std::collections::VecDeque::new();
-        let mut compressed_deque =
-            Deque::new_with_options(ChunkSize::SizeElements(1024 * 9), 0);
+        let mut compressed_deque = Deque::new_with_options(ChunkSize::SizeElements(1024 * 9), 0);
         for _ in 0..(1024 * 10) {
             big_vecdeque.push_back(1);
             compressed_deque.push_back(1);
@@ -142,6 +155,26 @@ mod tests {
         loop {
             let a = big_vecdeque.pop_front();
             let b = compressed_deque.pop_front();
+            assert!(a == b);
+            if a.is_none() | b.is_none() {
+                break;
+            }
+        }
+    }
+
+    #[test]
+    fn iter_test() {
+        let mut big_vecdeque = Vec::new();
+        let mut compressed_deque = Stack::new_with_options(ChunkSize::SizeElements(1024 * 9), 0);
+        for _ in 0..(1024 * 10) {
+            big_vecdeque.push(1.0);
+            compressed_deque.push(1.0);
+        }
+        let mut big_vecdeque_it = big_vecdeque.into_iter();
+        let mut compressed_deque_it = compressed_deque.into_iter();
+        loop {
+            let a = big_vecdeque_it.next();
+            let b = compressed_deque_it.next();
             assert!(a == b);
             if a.is_none() | b.is_none() {
                 break;

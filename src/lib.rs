@@ -12,7 +12,7 @@
 //!
 //! ```
 //! use compressed_collections::Stack;
-//! 
+//!
 //! let mut compressed_stack = Stack::new();
 //! for _ in 0..(1024 * 1024) {
 //!     compressed_stack.push(1.0);
@@ -49,7 +49,7 @@ pub use stack::Stack;
 /// ```
 /// use compressed_collections::Stack;
 /// use compressed_collections::ChunkSize;
-/// 
+///
 /// let mut compressed_stack = Stack::new_with_options(ChunkSize::SizeElements(1024 * 1024 * 1), 2);
 /// for _ in 0..(1024 * 1024 * 10) {
 ///     compressed_stack.push(1.0);
@@ -60,7 +60,7 @@ pub use stack::Stack;
 /// ```
 /// use compressed_collections::Stack;
 /// use compressed_collections::ChunkSize;
-/// 
+///
 /// let mut compressed_stack = Stack::new_with_options(ChunkSize::SizeElements(1024 * 1024 * 100), 2);
 /// for _ in 0..(1024 * 1024 * 10) {
 ///     compressed_stack.push(1.0);
@@ -97,8 +97,7 @@ mod tests {
     #[test]
     fn simple_test() {
         let mut big_vec = Vec::new();
-        let mut compressed_stack =
-            Stack::new_with_options(ChunkSize::SizeElements(1024 * 99), 2);
+        let mut compressed_stack = Stack::new_with_options(ChunkSize::SizeElements(1024 * 99), 2);
         for _ in 0..(1024 * 100) {
             big_vec.push(1.0);
             compressed_stack.push(1.0);
