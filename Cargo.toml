@@ -2,10 +2,17 @@
 name = "compressed_collections"
 version = "0.3.0"
 edition = "2021"
+authors = ["Max Conway"]
+repository = "https://github.com/maxconway/compressed_collections"
+description = "Collections which transparently compress data to reduce memory usage"
+license = "MIT OR Apache-2.0"
+keywords = ["stack", "collection", "memory"]
+categories = ["algorithms", "compression"]
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 brotli = "3.3.4"
-postcard = { version = "1.0.2", features = ["use-std"] }
-serde = { version = "1.0.152", features = ["derive"] }
+postcard = { version = "1.0.0", features = ["use-std"] }
+serde = { version = "1.0.0", features = ["derive"] }
