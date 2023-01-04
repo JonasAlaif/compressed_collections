@@ -32,8 +32,10 @@ use serde::Deserialize;
 use serde::Serialize;
 
 mod compression;
+mod deque;
 mod stack;
 
+pub use deque::Deque;
 pub use stack::Stack;
 
 /// The amount of data to buffer before compressing.
