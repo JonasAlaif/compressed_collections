@@ -33,6 +33,7 @@ pub struct Deque<T> {
     compressed_storage: VecDeque<Vec<u8>>,
     chunk_size: usize,
     compression_level: i32,
+    length: usize,
 }
 
 impl<T> Deque<T> {
@@ -58,12 +59,14 @@ impl<T> Deque<T> {
         let uncompressed_buffer_front = VecDeque::new();
         let uncompressed_buffer_back = VecDeque::new();
         let compressed_storage = VecDeque::new();
+        let length = 0;
         Deque {
             uncompressed_buffer_front,
             uncompressed_buffer_back,
             compressed_storage,
             chunk_size,
             compression_level,
+            length,
         }
     }
     /// Appends an element to the back of the deque.
@@ -72,6 +75,7 @@ impl<T> Deque<T> {
         T: Serialize,
     {
         self.uncompressed_buffer_back.push_back(value);
+        self.length += 1;
         if self.uncompressed_buffer_back.len() >= self.chunk_size {
             let compressed = compress(&self.uncompressed_buffer_back, self.compression_level);
             self.compressed_storage.push_back(compressed);
@@ -84,6 +88,7 @@ impl<T> Deque<T> {
         T: Serialize,
     {
         self.uncompressed_buffer_front.push_front(value);
+        self.length += 1;
         if self.uncompressed_buffer_front.len() >= self.chunk_size {
             let compressed = compress(&self.uncompressed_buffer_front, self.compression_level);
             self.compressed_storage.push_front(compressed);
@@ -102,7 +107,11 @@ impl<T> Deque<T> {
                 self.uncompressed_buffer_back = std::mem::take(&mut self.uncompressed_buffer_front);
             }
         }
-        self.uncompressed_buffer_back.pop_back()
+        let result = self.uncompressed_buffer_back.pop_back();
+        if result.is_some() {
+            self.length -= 1;
+        }
+        result
     }
     /// Removes the first element from the deque and returns it, or None if it is empty.
     pub fn pop_front(&mut self) -> Option<T>
@@ -116,7 +125,19 @@ impl<T> Deque<T> {
                 self.uncompressed_buffer_front = std::mem::take(&mut self.uncompressed_buffer_back);
             }
         }
-        self.uncompressed_buffer_front.pop_front()
+        let result = self.uncompressed_buffer_front.pop_front();
+        if result.is_some() {
+            self.length -= 1;
+        }
+        result
+    }
+    /// Returns the number of elements in the deque, also referred to as its ‘length’.
+    pub fn len(&self) -> usize {
+        self.length
+    }
+    /// Returns true if the deque has a length of 0.
+    pub fn is_empty(&self) -> bool {
+        self.length == 0
     }
 }
 
@@ -187,7 +208,7 @@ mod tests {
             compressed_deque.push(1.0);
         }
         let mut big_vecdeque_it = big_vecdeque.into_iter();
-        let mut compressed_deque_it = compressed_deque.into_iter();
+        let mut compressed_deque_it = compressed_deque;
         loop {
             let a = big_vecdeque_it.next();
             let b = compressed_deque_it.next();

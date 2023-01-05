@@ -27,6 +27,7 @@ pub struct Stack<T> {
     compressed_storage: Vec<Vec<u8>>,
     chunk_size: usize,
     compression_level: i32,
+    length: usize,
 }
 
 impl<T> Stack<T> {
@@ -52,11 +53,13 @@ impl<T> Stack<T> {
         };
         let uncompressed_buffer = Vec::new();
         let compressed_storage = Vec::new();
+        let length = 0;
         Stack {
             uncompressed_buffer,
             compressed_storage,
             chunk_size,
             compression_level,
+            length,
         }
     }
     /// Push an item onto the stack
@@ -65,6 +68,7 @@ impl<T> Stack<T> {
         T: Serialize,
     {
         self.uncompressed_buffer.push(value);
+        self.length += 1;
         if self.uncompressed_buffer.len() >= self.chunk_size {
             let compressed = compress(&self.uncompressed_buffer, self.compression_level);
             self.compressed_storage.push(compressed);
@@ -81,7 +85,19 @@ impl<T> Stack<T> {
                 self.uncompressed_buffer = decompress(&x);
             }
         }
-        self.uncompressed_buffer.pop()
+        let result = self.uncompressed_buffer.pop();
+        if result.is_some() {
+            self.length -= 1;
+        }
+        result
+    }
+    /// Returns the number of elements in the stack, also referred to as its ‘length’.
+    pub fn len(&self) -> usize {
+        self.length
+    }
+    /// Returns true if the stack has a length of 0.
+    pub fn is_empty(&self) -> bool {
+        self.length == 0
     }
 }
 
@@ -152,7 +168,7 @@ mod tests {
             compressed_stack.push(1.0);
         }
         let mut big_vec_it = big_vec.into_iter();
-        let mut compressed_stack_it = compressed_stack.into_iter();
+        let mut compressed_stack_it = compressed_stack;
         loop {
             let a = big_vec_it.next();
             let b = compressed_stack_it.next();
