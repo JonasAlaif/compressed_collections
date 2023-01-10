@@ -26,24 +26,22 @@ pub struct Stack<T> {
     uncompressed_buffer: Vec<T>,
     compressed_storage: Vec<Vec<u8>>,
     chunk_size: usize,
-    compression_level: i32,
     length: usize,
 }
 
 impl<T> Stack<T> {
     /// Constructor with default options
     pub fn new() -> Stack<T> {
-        Stack::new_with_options(ChunkSize::Default, 0)
+        Stack::new_with_options(ChunkSize::Default)
     }
 
     /// Constructor with customisable options
     ///
     /// - `chunksize` size of chunks to compress, see [`ChunkSize`]
-    /// - `compression_level` Brotli compression level (0-9) default is 0
     ///
     /// # Low stability
     /// This constructor is dependent on the internal implementation, so it is likely to change more frequently than [`Stack::new`]
-    pub fn new_with_options(chunksize: ChunkSize, compression_level: i32) -> Stack<T> {
+    pub fn new_with_options(chunksize: ChunkSize) -> Stack<T> {
         let elementsize = std::mem::size_of::<T>();
         let chunk_size = match chunksize {
             ChunkSize::SizeElements(x) => x,
@@ -58,7 +56,6 @@ impl<T> Stack<T> {
             uncompressed_buffer,
             compressed_storage,
             chunk_size,
-            compression_level,
             length,
         }
     }
@@ -70,7 +67,7 @@ impl<T> Stack<T> {
         self.uncompressed_buffer.push(value);
         self.length += 1;
         if self.uncompressed_buffer.len() >= self.chunk_size {
-            let compressed = compress(&self.uncompressed_buffer, self.compression_level);
+            let compressed = compress(&self.uncompressed_buffer);
             self.compressed_storage.push(compressed);
             self.uncompressed_buffer.clear();
         }
@@ -144,7 +141,7 @@ mod tests {
     #[test]
     fn simple_test() {
         let mut big_vec = Vec::new();
-        let mut compressed_stack = Stack::new_with_options(ChunkSize::SizeElements(1024 * 9), 0);
+        let mut compressed_stack = Stack::new_with_options(ChunkSize::SizeElements(1024 * 9));
         for _ in 0..(1024 * 10) {
             big_vec.push(1.0);
             compressed_stack.push(1.0);
@@ -162,7 +159,7 @@ mod tests {
     #[test]
     fn iter_test() {
         let mut big_vec = Vec::new();
-        let mut compressed_stack = Stack::new_with_options(ChunkSize::SizeElements(1024 * 9), 0);
+        let mut compressed_stack = Stack::new_with_options(ChunkSize::SizeElements(1024 * 9));
         for _ in 0..(1024 * 10) {
             big_vec.push(1.0);
             compressed_stack.push(1.0);

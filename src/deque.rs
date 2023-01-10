@@ -32,23 +32,21 @@ pub struct Deque<T> {
     uncompressed_buffer_back: VecDeque<T>,
     compressed_storage: VecDeque<Vec<u8>>,
     chunk_size: usize,
-    compression_level: i32,
     length: usize,
 }
 
 impl<T> Deque<T> {
     /// Constructor with default options
     pub fn new() -> Deque<T> {
-        Deque::new_with_options(ChunkSize::Default, 0)
+        Deque::new_with_options(ChunkSize::Default)
     }
     /// Constructor with customisable options
     ///
     /// - `chunksize` size of chunks to compress, see [`ChunkSize`]
-    /// - `compression_level` Brotli compression level (0-9) default is 0
     ///
     /// # Low stability
     /// This constructor is dependent on the internal implementation, so it is likely to change more frequently than [`Deque::new`]
-    pub fn new_with_options(chunksize: ChunkSize, compression_level: i32) -> Deque<T> {
+    pub fn new_with_options(chunksize: ChunkSize) -> Deque<T> {
         let elementsize = std::mem::size_of::<T>();
         let chunk_size = match chunksize {
             ChunkSize::SizeElements(x) => x,
@@ -65,7 +63,6 @@ impl<T> Deque<T> {
             uncompressed_buffer_back,
             compressed_storage,
             chunk_size,
-            compression_level,
             length,
         }
     }
@@ -77,7 +74,7 @@ impl<T> Deque<T> {
         self.uncompressed_buffer_back.push_back(value);
         self.length += 1;
         if self.uncompressed_buffer_back.len() >= self.chunk_size {
-            let compressed = compress(&self.uncompressed_buffer_back, self.compression_level);
+            let compressed = compress(&self.uncompressed_buffer_back);
             self.compressed_storage.push_back(compressed);
             self.uncompressed_buffer_back.clear();
         }
@@ -90,7 +87,7 @@ impl<T> Deque<T> {
         self.uncompressed_buffer_front.push_front(value);
         self.length += 1;
         if self.uncompressed_buffer_front.len() >= self.chunk_size {
-            let compressed = compress(&self.uncompressed_buffer_front, self.compression_level);
+            let compressed = compress(&self.uncompressed_buffer_front);
             self.compressed_storage.push_front(compressed);
             self.uncompressed_buffer_front.clear();
         }
@@ -184,7 +181,7 @@ mod tests {
     #[test]
     fn simple_test() {
         let mut big_vecdeque = std::collections::VecDeque::new();
-        let mut compressed_deque = Deque::new_with_options(ChunkSize::SizeElements(1024 * 9), 0);
+        let mut compressed_deque = Deque::new_with_options(ChunkSize::SizeElements(1024 * 9));
         for _ in 0..(1024 * 10) {
             big_vecdeque.push_back(1);
             compressed_deque.push_back(1);
@@ -202,10 +199,10 @@ mod tests {
     #[test]
     fn iter_test() {
         let mut big_vecdeque = Vec::new();
-        let mut compressed_deque = Stack::new_with_options(ChunkSize::SizeElements(1024 * 9), 0);
+        let mut compressed_deque = Deque::new_with_options(ChunkSize::SizeElements(1024 * 9));
         for _ in 0..(1024 * 10) {
             big_vecdeque.push(1.0);
-            compressed_deque.push(1.0);
+            compressed_deque.push_back(1.0);
         }
         let mut big_vecdeque_it = big_vecdeque.into_iter();
         let mut compressed_deque_it = compressed_deque;
@@ -217,5 +214,89 @@ mod tests {
                 break;
             }
         }
+    }
+
+    #[test]
+    fn bench_80_mb_by_64_kb() {
+        let mut compressed_deque = Deque::new_with_options(ChunkSize::SizeBytes(1024 * 64));
+        for x in 0..(1024 * 1024 * 10) {
+            let y = x % 7;
+            compressed_deque.push_back(y as f64);
+        }
+        let mut total = 0.0;
+        while let Some(x) = compressed_deque.pop_front() {
+            total += x;
+        }
+        println!("total: {total}");
+    }
+
+    #[test]
+    fn bench_80_mb_by_128_kb() {
+        let mut compressed_deque = Deque::new_with_options(ChunkSize::SizeBytes(1024 * 128));
+        for x in 0..(1024 * 1024 * 10) {
+            let y = x % 7;
+            compressed_deque.push_back(y as f64);
+        }
+        let mut total = 0.0;
+        while let Some(x) = compressed_deque.pop_front() {
+            total += x;
+        }
+        println!("total: {total}");
+    }
+
+    #[test]
+    fn bench_80_mb_by_256_kb() {
+        let mut compressed_deque = Deque::new_with_options(ChunkSize::SizeBytes(1024 * 256));
+        for x in 0..(1024 * 1024 * 10) {
+            let y = x % 7;
+            compressed_deque.push_back(y as f64);
+        }
+        let mut total = 0.0;
+        while let Some(x) = compressed_deque.pop_front() {
+            total += x;
+        }
+        println!("total: {total}");
+    }
+
+    #[test]
+    fn bench_80_mb_by_512_kb() {
+        let mut compressed_deque = Deque::new_with_options(ChunkSize::SizeBytes(1024 * 512));
+        for x in 0..(1024 * 1024 * 10) {
+            let y = x % 7;
+            compressed_deque.push_back(y as f64);
+        }
+        let mut total = 0.0;
+        while let Some(x) = compressed_deque.pop_front() {
+            total += x;
+        }
+        println!("total: {total}");
+    }
+
+    #[test]
+    fn bench_80_mb_by_1024_kb() {
+        let mut compressed_deque = Deque::new_with_options(ChunkSize::SizeBytes(1024 * 1024));
+        for x in 0..(1024 * 1024 * 10) {
+            let y = x % 7;
+            compressed_deque.push_back(y as f64);
+        }
+        let mut total = 0.0;
+        while let Some(x) = compressed_deque.pop_front() {
+            total += x;
+        }
+        println!("total: {total}");
+    }
+
+    #[test]
+    fn bench_80_mb_by_100_mb() {
+        let mut compressed_deque = Deque::new_with_options(ChunkSize::SizeBytes(1024 * 1024 * 100));
+        for x in 0..(1024 * 1024 * 10) {
+            let y = x % 7;
+            compressed_deque.push_back(y as f64);
+        }
+        let mut total = 0.0;
+        while let Some(x) = compressed_deque.pop_front() {
+            total += x;
+        }
+        println!("total: {total}");
     }
 }

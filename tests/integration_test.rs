@@ -5,7 +5,7 @@ use compressed_collections::Stack;
 #[test]
 fn stack_test() {
     let mut big_vec = Vec::new();
-    let mut compressed_stack = Stack::new_with_options(ChunkSize::SizeElements(1024 * 9), 0);
+    let mut compressed_stack = Stack::new_with_options(ChunkSize::SizeElements(1024 * 9));
     for x in 0..(1024 * 10) {
         let y = (x % 5) as f64;
         big_vec.push(y);
@@ -24,7 +24,7 @@ fn stack_test() {
 #[test]
 fn deque_test() {
     let mut big_vecdeque = std::collections::VecDeque::new();
-    let mut compressed_deque = Deque::new_with_options(ChunkSize::SizeElements(1024 * 9), 0);
+    let mut compressed_deque = Deque::new_with_options(ChunkSize::SizeElements(1024 * 9));
     for _ in 0..(1024 * 10) {
         big_vecdeque.push_back(1);
         compressed_deque.push_back(1);
@@ -42,7 +42,7 @@ fn deque_test() {
 #[test]
 fn deque_test_2() {
     let mut big_vecdeque = std::collections::VecDeque::new();
-    let mut compressed_deque = Deque::new_with_options(ChunkSize::SizeElements(1024 * 1), 0);
+    let mut compressed_deque = Deque::new_with_options(ChunkSize::SizeElements(1024 * 1));
     for _ in 0..(1024 * 10) {
         big_vecdeque.push_front(1);
         compressed_deque.push_front(1);
@@ -60,7 +60,7 @@ fn deque_test_2() {
 #[test]
 fn deque_test_3() {
     let mut big_vecdeque = std::collections::VecDeque::new();
-    let mut compressed_deque = Deque::new_with_options(ChunkSize::SizeElements(1024 * 1), 0);
+    let mut compressed_deque = Deque::new_with_options(ChunkSize::SizeElements(1024 * 1));
     for _ in 0..(1024 * 10) {
         big_vecdeque.push_front(1);
         compressed_deque.push_front(1);
@@ -78,7 +78,7 @@ fn deque_test_3() {
 #[test]
 fn deque_test_4() {
     let mut big_vecdeque = std::collections::VecDeque::new();
-    let mut compressed_deque = Deque::new_with_options(ChunkSize::SizeElements(1024 * 1), 0);
+    let mut compressed_deque = Deque::new_with_options(ChunkSize::SizeElements(1024 * 1));
     for _ in 0..(1024 * 10) {
         big_vecdeque.push_back(1);
         compressed_deque.push_back(1);
@@ -96,7 +96,7 @@ fn deque_test_4() {
 #[test]
 fn deque_test_5() {
     let mut big_vecdeque = std::collections::VecDeque::new();
-    let mut compressed_deque = Deque::new_with_options(ChunkSize::SizeElements(1024 * 1), 0);
+    let mut compressed_deque = Deque::new_with_options(ChunkSize::SizeElements(1024 * 1));
     for x in 0..(1024 * 10) {
         let y = x % 7;
         big_vecdeque.push_back(y);
