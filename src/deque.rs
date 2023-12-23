@@ -30,7 +30,7 @@ use crate::ChunkSize;
 pub struct Deque<T> {
     uncompressed_buffer_front: VecDeque<T>,
     uncompressed_buffer_back: VecDeque<T>,
-    compressed_storage: VecDeque<Vec<u8>>,
+    compressed_storage: VecDeque<Box<[u8]>>,
     chunk_size: usize,
     compression_level: i32,
     length: usize,
@@ -202,7 +202,7 @@ mod tests {
     #[test]
     fn iter_test() {
         let mut big_vecdeque = Vec::new();
-        let mut compressed_deque = Stack::new_with_options(ChunkSize::SizeElements(1024 * 9), 0);
+        let mut compressed_deque = Stack::new_with_chunk_elems::<{ 1024 * 9 }, 0, 1>();
         for _ in 0..(1024 * 10) {
             big_vecdeque.push(1.0);
             compressed_deque.push(1.0);
