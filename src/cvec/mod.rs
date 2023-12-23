@@ -5,7 +5,7 @@ mod inner;
 use either::Either;
 use serde::{Deserialize, Serialize};
 
-use self::cache::{Cache, Cached, Uncached, CacheAccess};
+use self::cache::{Cache, Cached, Uncached, CacheAccess, RcCacheAccess, RcCached};
 use self::inner::CVec as CVecInner;
 pub use self::iterator::{CVecIntoIter, CVecIntoIterUncached};
 use crate::compression::{compress, decompress};
@@ -44,29 +44,29 @@ impl<T> CVec<T, 0, 0> {
     }
 }
 
-// /// A stack which automatically compresses itself over a certain size
-// ///
-// /// # Examples
-// ///
-// /// ```
-// /// // use compressed_collections::CVec;
-// ///
-// /// // let mut compressed_stack = CVec::new();
-// /// // for _ in 0..(1024) {
-// /// //     compressed_stack.push(1.0);
-// /// // }
-// /// ```
-// ///
-// /// # Panics
-// ///
-// /// This function should not panic (except on out of memory conditions). If it does, please submit an issue.
-// pub type CVecRc<T, const CHUNK_ELEMS: usize = 1024, const COMPRESSION_LEVEL: i32 = 0> = CVecInner<T, CHUNK_ELEMS, COMPRESSION_LEVEL, RcCached<T, CHUNK_ELEMS>>;
+/// A stack which automatically compresses itself over a certain size
+///
+/// # Examples
+///
+/// ```
+/// // use compressed_collections::CVec;
+///
+/// // let mut compressed_stack = CVec::new();
+/// // for _ in 0..(1024) {
+/// //     compressed_stack.push(1.0);
+/// // }
+/// ```
+///
+/// # Panics
+///
+/// This function should not panic (except on out of memory conditions). If it does, please submit an issue.
+pub type CVecRc<T, const CHUNK_ELEMS: usize = 1024, const COMPRESSION_LEVEL: i32 = 0> = CVecInner<T, CHUNK_ELEMS, COMPRESSION_LEVEL, RcCached<T, CHUNK_ELEMS>>;
 
-// impl<T> CVecRc<T, 0, 0> {
-//     pub fn new<const CHUNK_ELEMS: usize, const COMPRESSION_LEVEL: i32>() -> CVecRc<T, CHUNK_ELEMS, COMPRESSION_LEVEL> {
-//         CVecInner::default()
-//     }
-// }
+impl<T> CVecRc<T, 0, 0> {
+    pub fn new<const CHUNK_ELEMS: usize, const COMPRESSION_LEVEL: i32>() -> CVecRc<T, CHUNK_ELEMS, COMPRESSION_LEVEL> {
+        CVecInner::default()
+    }
+}
 
 /// A stack which automatically compresses itself over a certain size
 ///
@@ -151,7 +151,7 @@ impl<T, C: Cache, const CHUNK_ELEMS: usize, const COMPRESSION_LEVEL: i32> CVecIn
         }
     }
     #[must_use]
-    pub fn get(&mut self, idx: usize) -> Option<&T> where T: for<'a> Deserialize<'a>, C: CacheAccess<T> {
+    pub fn get_ref(&mut self, idx: usize) -> Option<&T> where T: for<'a> Deserialize<'a>, C: CacheAccess<T> {
         match self.split(idx)? {
             Either::Left((chunk_idx, chunk_offset)) => {
                 let data = &self.compressed_storage[chunk_idx];
@@ -159,6 +159,18 @@ impl<T, C: Cache, const CHUNK_ELEMS: usize, const COMPRESSION_LEVEL: i32> CVecIn
             }
             Either::Right(elem) =>
                 Some(&self.uncompressed_buffer[elem]),
+        }
+    }
+
+    #[must_use]
+    pub fn get(&self, idx: usize) -> Option<T> where T: for<'a> Deserialize<'a> + Clone, C: RcCacheAccess<T, CHUNK_ELEMS> {
+        match self.split(idx)? {
+            Either::Left((chunk_idx, chunk_offset)) => {
+                let data = &self.compressed_storage[chunk_idx];
+                Some(self.cache.get_compressed(chunk_idx, chunk_offset, data).borrow().clone())
+            }
+            Either::Right(elem) =>
+                Some(self.uncompressed_buffer[elem].clone()),
         }
     }
     // #[must_use]
@@ -211,7 +223,7 @@ mod tests {
         // Test `get`
         for idx in 0..(1024 * 10) + 1 {
             let bv = big_vec.get(idx);
-            let cv = compressed_stack.get(idx);
+            let cv = compressed_stack.get_ref(idx);
             assert_eq!(bv, cv);
         }
         // Test `compress` and `decompress`
@@ -219,7 +231,7 @@ mod tests {
         compressed_stack = decompress(&data);
         for idx in 0..(1024 * 10) + 1 {
             let bv = big_vec.get(idx);
-            let cv = compressed_stack.get(idx);
+            let cv = compressed_stack.get_ref(idx);
             assert_eq!(bv, cv);
         }
         // Test `pop`

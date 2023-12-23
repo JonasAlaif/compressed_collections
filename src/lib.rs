@@ -36,7 +36,7 @@ mod compression;
 mod cvec;
 
 // pub use deque::Deque;
-pub use cvec::{CVec, CVecUncached, CVecIntoIter, CVecIntoIterUncached};
+pub use cvec::{CVec, CVecRc, CVecUncached, CVecIntoIter, CVecIntoIterUncached};
 
 #[cfg(test)]
 mod tests {

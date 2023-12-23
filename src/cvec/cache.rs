@@ -131,71 +131,71 @@ where for<'a> T: Deserialize<'a>
     }
 }
 
-// pub trait RcCacheAccess<T, const CHUNK_ELEMS: usize> {
-//     fn get_compressed<'e>(&'e self, index: usize, offset: usize, data: &'e [u8]) -> Entry<'e, T, CHUNK_ELEMS>;
-// }
+pub trait RcCacheAccess<T, const CHUNK_ELEMS: usize> {
+    fn get_compressed<'e>(&'e self, index: usize, offset: usize, data: &'e [u8]) -> Entry<'e, T, CHUNK_ELEMS>;
+}
 
-// impl<T, const CHUNK_ELEMS: usize> RcCacheAccess<T, CHUNK_ELEMS> for RcCached<T, CHUNK_ELEMS>
-// where for<'a> T: Deserialize<'a>
-// {
-//     fn get_compressed<'e>(&'e self, index: usize, offset: usize, data: &'e [u8]) -> Entry<'e, T, CHUNK_ELEMS> {
-//         Entry::Compressed { cache: self, index, offset, data }
-//     }
-// }
+impl<T, const CHUNK_ELEMS: usize> RcCacheAccess<T, CHUNK_ELEMS> for RcCached<T, CHUNK_ELEMS>
+where for<'a> T: Deserialize<'a>
+{
+    fn get_compressed<'e>(&'e self, index: usize, offset: usize, data: &'e [u8]) -> Entry<'e, T, CHUNK_ELEMS> {
+        Entry::Compressed { cache: self, index, offset, data }
+    }
+}
 
-// pub enum Entry<'e, T, const CHUNK_ELEMS: usize> {
-//     Compressed {
-//         cache: &'e RcCached<T, CHUNK_ELEMS>,
-//         index: usize,
-//         offset: usize,
-//         data: &'e [u8],
-//     },
-//     Uncompressed(&'e T),
-// }
+pub enum Entry<'e, T, const CHUNK_ELEMS: usize> {
+    Compressed {
+        cache: &'e RcCached<T, CHUNK_ELEMS>,
+        index: usize,
+        offset: usize,
+        data: &'e [u8],
+    },
+    Uncompressed(&'e T),
+}
 
-// impl<'e, T, const CHUNK_ELEMS: usize> Entry<'e, T, CHUNK_ELEMS> {
-//     pub fn borrow(&self) -> EntryRef<'e, T, CHUNK_ELEMS> where for<'a> T: Deserialize<'a> {
-//         match *self {
-//             Entry::Compressed { cache, index, offset, data } => {
-//                 let cache_ref = cache.0.borrow();
-//                 let is_cached = cache_ref.is_cached(index);
-//                 drop(cache_ref);
-//                 if !is_cached {
-//                     let mut cache_ref = cache.0.borrow_mut();
-//                     cache_ref.fill_cache(index, data);
-//                     drop(cache_ref);
-//                 }
-//                 EntryRef::Compressed {
-//                     cache: cache.0.borrow(),
-//                     offset: offset,
-//                 }
-//             }
-//             Entry::Uncompressed(data) => EntryRef::Uncompressed(data),
-//         }
-//     }
-// }
+impl<'e, T, const CHUNK_ELEMS: usize> Entry<'e, T, CHUNK_ELEMS> {
+    pub fn borrow(&self) -> EntryRef<'e, T, CHUNK_ELEMS> where for<'a> T: Deserialize<'a> {
+        match *self {
+            Entry::Compressed { cache, index, offset, data } => {
+                let cache_ref = cache.0.borrow();
+                let is_cached = cache_ref.is_cached(index);
+                drop(cache_ref);
+                if !is_cached {
+                    let mut cache_ref = cache.0.borrow_mut();
+                    cache_ref.fill_cache(index, data);
+                    drop(cache_ref);
+                }
+                EntryRef::Compressed {
+                    cache: cache.0.borrow(),
+                    offset: offset,
+                }
+            }
+            Entry::Uncompressed(data) => EntryRef::Uncompressed(data),
+        }
+    }
+}
 
-// pub enum EntryRef<'e, T, const CHUNK_ELEMS: usize> {
-//     Compressed {
-//         cache: Ref<'e, Cached<T, CHUNK_ELEMS>>,
-//         offset: usize,
-//     },
-//     Uncompressed(&'e T),
-// }
+pub enum EntryRef<'e, T, const CHUNK_ELEMS: usize> {
+    Compressed {
+        cache: Ref<'e, Cached<T, CHUNK_ELEMS>>,
+        offset: usize,
+    },
+    Uncompressed(&'e T),
+}
 
-// impl<'e, T, const CHUNK_ELEMS: usize> std::ops::Deref for EntryRef<'e, T, CHUNK_ELEMS> {
-//     type Target = T;
-//     fn deref(&self) -> &Self::Target {
-//         match self {
-//             EntryRef::Compressed { cache, offset } =>
-//                 &cache.data.as_ref().unwrap().0[*offset],
-//             EntryRef::Uncompressed(data) => *data,
-//         }
-//     }
-// }
-// impl<'e, T, const CHUNK_ELEMS: usize> AsRef<T> for EntryRef<'e, T, CHUNK_ELEMS> {
-//     fn as_ref(&self) -> &T {
-//         use std::ops::Deref;
-//         Self::deref(self)
-//     }
-// }
+impl<'e, T, const CHUNK_ELEMS: usize> std::ops::Deref for EntryRef<'e, T, CHUNK_ELEMS> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        match self {
+            EntryRef::Compressed { cache, offset } =>
+                &cache.data.as_ref().unwrap().0[*offset],
+            EntryRef::Uncompressed(data) => *data,
+        }
+    }
+}
+impl<'e, T, const CHUNK_ELEMS: usize> AsRef<T> for EntryRef<'e, T, CHUNK_ELEMS> {
+    fn as_ref(&self) -> &T {
+        use std::ops::Deref;
+        Self::deref(self)
+    }
+}
