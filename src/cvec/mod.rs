@@ -194,6 +194,12 @@ impl<T, C: Cache, const CHUNK_ELEMS: usize, const COMPRESSION_LEVEL: i32> CVecIn
     //         }
     //     }
     // }
+    pub fn uncompressed(&self) -> &Vec<T> {
+        &self.uncompressed_buffer
+    }
+    pub fn compressed(&self) -> &Vec<Box<[u8]>> {
+        &self.compressed_storage
+    }
 
     fn split(&self, idx: usize) -> Value<(usize, usize), usize> {
         let (idx, offset) = (idx / CHUNK_ELEMS, idx % CHUNK_ELEMS);
